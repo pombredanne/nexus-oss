@@ -89,7 +89,9 @@
             <exclude>org.codehaus.plexus:plexus-classworlds</exclude>
             <exclude>org.codehaus.plexus:plexus-component-annotations</exclude>
             <exclude>org.codehaus.plexus:plexus-interpolation</exclude>
+            <exclude>org.eclipse.sisu:org.eclipse.sisu.inject</exclude>
             <exclude>org.sonatype.sisu:sisu-inject-bean</exclude>
+            <exclude>org.eclipse.sisu:org.eclipse.sisu.plexus</exclude>
             <exclude>org.sonatype.sisu:sisu-inject-plexus</exclude>
             <exclude>org.apache.httpcomponents</exclude>
             <exclude>org.slf4j</exclude>

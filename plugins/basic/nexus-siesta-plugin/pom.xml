@@ -121,6 +121,7 @@
           Exclude dependencies which are provided by NX core.
           -->
           <classpathDependencyExcludes>
+            <exclude>org.eclipse.sisu:org.eclipse.sisu.inject</exclude>
             <exclude>org.sonatype.sisu:sisu-inject-bean</exclude>
           </classpathDependencyExcludes>
         </configuration>

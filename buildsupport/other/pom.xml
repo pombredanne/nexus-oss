@@ -91,6 +91,10 @@
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.sonatype.sisu.inject</groupId>
+            <artifactId>guice-bean-containers</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 

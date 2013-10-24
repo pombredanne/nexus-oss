@@ -108,7 +108,6 @@ public class YumRegistryImpl
   public Yum unregister(final String repositoryId) {
     final Yum yum = yums.remove(repositoryId);
     if (yum != null) {
-      yum.getNexusRepository().unregisterRequestStrategy(ProxyMetadataRequestStrategy.class.getName());
       yum.getNexusRepository().unregisterRequestStrategy(MergeMetadataRequestStrategy.class.getName());
       LOG.info("Unregistered repository '{}' as Yum repository", repositoryId);
     }

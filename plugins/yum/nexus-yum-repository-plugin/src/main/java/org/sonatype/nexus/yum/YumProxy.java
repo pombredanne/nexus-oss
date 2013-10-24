@@ -22,4 +22,11 @@ public interface YumProxy
     extends Yum
 {
 
+  /**
+   * Retrieves all metadata specified by Yum repomd.xml.
+   *
+   * @return itself
+   */
+  YumProxy syncRepoMD();
+
 }

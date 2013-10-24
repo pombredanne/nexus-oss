@@ -36,6 +36,7 @@ import org.sonatype.nexus.proxy.repository.GroupRepository;
 import org.sonatype.nexus.proxy.repository.Repository;
 import org.sonatype.nexus.scheduling.AbstractNexusTask;
 import org.sonatype.nexus.scheduling.NexusScheduler;
+import org.sonatype.nexus.yum.Yum;
 import org.sonatype.nexus.yum.YumRepository;
 import org.sonatype.nexus.yum.internal.RepoMD;
 import org.sonatype.nexus.yum.internal.RepositoryUtils;
@@ -49,7 +50,6 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
-import static org.sonatype.nexus.yum.Yum.PATH_OF_REPOMD_XML;
 import static org.sonatype.scheduling.TaskState.RUNNING;
 
 /**
@@ -90,7 +90,7 @@ public class MergeMetadataTask
       deleteYumTempDirs();
 
       final File repoBaseDir = RepositoryUtils.getBaseDir(groupRepository);
-      RepositoryItemUid groupRepoMdUid = groupRepository.createUid("/" + PATH_OF_REPOMD_XML);
+      RepositoryItemUid groupRepoMdUid = groupRepository.createUid(Yum.PATH_OF_REPOMD_XML);
       try {
         groupRepoMdUid.getLock().lock(Action.update);
 
@@ -128,9 +128,9 @@ public class MergeMetadataTask
       log.trace("Looking up latest Yum metadata in {} member of {}", memberRepository.getId(), groupRepository.getId());
       StorageItem repomdItem = null;
       try {
-        log.trace("Retrieving {}:{}", memberRepository.getId(), "/" + PATH_OF_REPOMD_XML);
+        log.trace("Retrieving {}:{}", memberRepository.getId(), Yum.PATH_OF_REPOMD_XML);
         repomdItem = memberRepository.retrieveItem(
-            new ResourceStoreRequest("/" + PATH_OF_REPOMD_XML)
+            new ResourceStoreRequest(Yum.PATH_OF_REPOMD_XML)
         );
       }
       catch (ItemNotFoundException ignore) {

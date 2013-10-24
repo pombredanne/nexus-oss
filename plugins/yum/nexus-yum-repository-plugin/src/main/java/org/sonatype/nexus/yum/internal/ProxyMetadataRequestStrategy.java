@@ -52,8 +52,6 @@ public class ProxyMetadataRequestStrategy
 {
   private static final Logger log = LoggerFactory.getLogger(ProxyMetadataRequestStrategy.class);
 
-  private static final String REPOMD_XML_PATH = "/" + Yum.PATH_OF_REPOMD_XML;
-
   private final Walker walker;
 
   @Inject
@@ -66,7 +64,7 @@ public class ProxyMetadataRequestStrategy
       throws ItemNotFoundException, IllegalOperationException
   {
     // do this only if request path in question asks for "repomd.xml"
-    if (REPOMD_XML_PATH.equals(request.getRequestPath())) {
+    if (Yum.PATH_OF_REPOMD_XML.equals(request.getRequestPath())) {
       try {
         log.trace("Cleaning up Yum metadata from {}:/{}", proxy.getId(), Yum.PATH_OF_REPODATA);
         final ResourceStoreRequest wrequest = new ResourceStoreRequest(request);

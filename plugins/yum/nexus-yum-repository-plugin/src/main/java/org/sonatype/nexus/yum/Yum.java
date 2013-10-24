@@ -14,12 +14,8 @@
 package org.sonatype.nexus.yum;
 
 import java.io.File;
-import java.net.URL;
-import java.util.Map;
-import java.util.Set;
 
 import org.sonatype.nexus.proxy.repository.Repository;
-import org.sonatype.scheduling.ScheduledTask;
 
 /**
  * Provides access to Yum functionality around a Nexus repository.
@@ -35,7 +31,7 @@ public interface Yum
 
   String NAME_OF_REPOMD_XML = "repomd.xml";
 
-  String PATH_OF_REPOMD_XML = PATH_OF_REPODATA + "/" + NAME_OF_REPOMD_XML;
+  String PATH_OF_REPOMD_XML = "/" + PATH_OF_REPODATA + "/" + NAME_OF_REPOMD_XML;
 
   /**
    * @return associated Nexus repository (never null)

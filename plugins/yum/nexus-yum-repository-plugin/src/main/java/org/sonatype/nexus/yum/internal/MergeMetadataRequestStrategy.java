@@ -51,8 +51,6 @@ public class MergeMetadataRequestStrategy
 
   private static final Logger log = LoggerFactory.getLogger(MergeMetadataRequestStrategy.class);
 
-  private static final String PATH_OF_REPOMD_XML = "/" + Yum.PATH_OF_REPOMD_XML;
-
   private final YumRegistry yumRegistry;
 
   @Inject
@@ -66,14 +64,14 @@ public class MergeMetadataRequestStrategy
   {
     GroupRepository groupRepository = repository.adaptToFacet(GroupRepository.class);
     final String requestPath = request.getRequestPath();
-    if (Action.read.equals(action) && requestPath.endsWith(PATH_OF_REPOMD_XML) && groupRepository != null) {
+    if (Action.read.equals(action) && requestPath.endsWith(Yum.PATH_OF_REPOMD_XML) && groupRepository != null) {
       Yum yum = yumRegistry.get(groupRepository.getId());
       if (yum != null && yum instanceof YumGroup) {
         for (Repository member : groupRepository.getMemberRepositories()) {
           if (member.getRepositoryKind().isFacetAvailable(ProxyRepository.class)) {
             try {
-              log.debug("Fetching {}:{} member of {}", member.getId(), PATH_OF_REPOMD_XML, groupRepository.getId());
-              member.retrieveItem(new ResourceStoreRequest(PATH_OF_REPOMD_XML));
+              log.debug("Fetching {}:{} member of {}", member.getId(), Yum.PATH_OF_REPOMD_XML, groupRepository.getId());
+              member.retrieveItem(new ResourceStoreRequest(Yum.PATH_OF_REPOMD_XML));
             }
             catch (ItemNotFoundException e) {
               // proxy repo is not a yum repository, go on
@@ -81,7 +79,7 @@ public class MergeMetadataRequestStrategy
             catch (Exception e) {
               log.debug(
                   "Could not retrieve {} from {}, member of yum enabled group {}. Ignoring.",
-                  PATH_OF_REPOMD_XML, member.getId(), groupRepository.getId(), e
+                  Yum.PATH_OF_REPOMD_XML, member.getId(), groupRepository.getId(), e
               );
             }
           }

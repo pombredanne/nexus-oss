@@ -96,27 +96,49 @@ public class YumProxyImpl
 
   @Override
   public YumProxy syncRepoMD() throws Exception {
-    StorageItem repomdItem = repository.retrieveItem(new ResourceStoreRequest(Yum.PATH_OF_REPOMD_XML));
-    if (repomdItem instanceof StorageFileItem) {
-      RepositoryItemUid repomdUid = repomdItem.getRepositoryItemUid();
-      repomdUid.getLock().lock(Action.update);
-      try (InputStream in = ((StorageFileItem) repomdItem).getInputStream()) {
-        final RepoMD repomd = new RepoMD(in);
-
-        retrieveReferenced(repomd);
-        removeObsolete(repomd);
-      }
-      finally {
-        repomdUid.getLock().unlock();
-      }
+    RepositoryItemUid repomdUid = repository.createUid(Yum.PATH_OF_REPOMD_XML);
+    repomdUid.getLock().lock(Action.update);
+    try {
+      RepoMD repomd = getRepoMD();
+      retrieveMetadataFromRemote(repomd);
+      repomd = changeBaseUrlInPrimaryXml(repomd);
+      repomd = changeBaseUrlInPrimarySQLite(repomd);
+      removeObsoleteMetadata(repomd);
     }
-
+    finally {
+      repomdUid.getLock().unlock();
+    }
     return this;
   }
 
-  private void removeObsolete(final RepoMD repomd) {
+  private RepoMD getRepoMD() throws Exception {
+    StorageItem repomdItem = repository.retrieveItem(new ResourceStoreRequest(Yum.PATH_OF_REPOMD_XML));
+    try (InputStream in = ((StorageFileItem) repomdItem).getInputStream()) {
+      return new RepoMD(in);
+    }
+  }
+
+  private void retrieveMetadataFromRemote(final RepoMD repomd)
+      throws Exception
+  {
+    for (final String location : repomd.getLocations()) {
+      log.trace("Retrieving {}:{}", repository.getId(), "/" + location);
+      repository.retrieveItem(new ResourceStoreRequest("/" + location));
+    }
+  }
+
+  private RepoMD changeBaseUrlInPrimaryXml(final RepoMD repomd) {
+    return repomd;
+  }
+
+  private RepoMD changeBaseUrlInPrimarySQLite(final RepoMD repomd) {
+    return repomd;
+  }
+
+
+  private void removeObsoleteMetadata(final RepoMD repomd) {
     try {
-      log.trace("Cleaning up Yum metadata from {}:/{}", repository.getId(), Yum.PATH_OF_REPODATA);
+      log.trace("Cleaning up Yum metadata from {}:{}", repository.getId(), Yum.PATH_OF_REPODATA);
       final Collection<String> locations = Collections2.transform(repomd.getLocations(), new Function<String, String>()
       {
         @Nullable
@@ -165,15 +187,6 @@ public class YumProxyImpl
           );
         }
       }
-    }
-  }
-
-  private void retrieveReferenced(final RepoMD repomd)
-      throws Exception
-  {
-    for (final String location : repomd.getLocations()) {
-      log.trace("Retrieving {}:{}", repository.getId(), "/" + location);
-      repository.retrieveItem(new ResourceStoreRequest("/" + location));
     }
   }
 

@@ -125,7 +125,7 @@ public class EventsRouter
 
       log.debug("Yum metadata changed for {}. Syncing referenced data...", repository.getId());
       Yum yumProxy = yumRegistryProvider.get().get(repository.getId());
-      if (yumProxy != null && yumProxy instanceof YumGroup) {
+      if (yumProxy != null && yumProxy instanceof YumProxy) {
         ((YumProxy) yumProxy).syncRepoMD();
       }
 

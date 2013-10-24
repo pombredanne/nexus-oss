@@ -27,6 +27,6 @@ public interface YumProxy
    *
    * @return itself
    */
-  YumProxy syncRepoMD();
+  YumProxy syncRepoMD() throws Exception;
 
 }

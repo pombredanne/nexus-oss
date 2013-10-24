@@ -35,6 +35,7 @@ import org.sonatype.nexus.proxy.repository.ProxyRepository;
 import org.sonatype.nexus.yum.Yum;
 import org.sonatype.nexus.yum.YumGroup;
 import org.sonatype.nexus.yum.YumHosted;
+import org.sonatype.nexus.yum.YumProxy;
 import org.sonatype.nexus.yum.YumRegistry;
 import org.sonatype.sisu.goodies.eventbus.EventBus;
 
@@ -111,15 +112,23 @@ public class EventsRouter
   }
 
   /**
-   * Automatically merge group level metadata when "/repodata/repomd.xml" is (re)retrieved from proxy.
+   * Automatically sync all files referenced and merge group level metadata when "/repodata/repomd.xml" is
+   * (re)retrieved from proxy.
    *
    * @since 2.7
    */
   @AllowConcurrentEvents
   @Subscribe
-  public void on(RepositoryItemEventCache itemEvent) {
+  public void on(RepositoryItemEventCache itemEvent) throws Exception {
     ProxyRepository repository = itemEvent.getRepository().adaptToFacet(ProxyRepository.class);
     if (repository != null && itemEvent.getItem().getPath().toLowerCase().equals(Yum.PATH_OF_REPOMD_XML)) {
+
+      log.debug("Yum metadata changed for {}. Syncing referenced data...", repository.getId());
+      Yum yumProxy = yumRegistryProvider.get().get(repository.getId());
+      if (yumProxy != null && yumProxy instanceof YumGroup) {
+        ((YumProxy) yumProxy).syncRepoMD();
+      }
+
       log.debug("Yum metadata changed for {}. Looking if we should merge it...", repository.getId());
       List<GroupRepository> groups = repositoryRegistry.get().getGroupsOfRepository(repository);
       for (GroupRepository group : groups) {

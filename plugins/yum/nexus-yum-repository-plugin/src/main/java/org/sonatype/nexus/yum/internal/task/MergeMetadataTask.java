@@ -16,7 +16,6 @@ package org.sonatype.nexus.yum.internal.task;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -30,15 +29,12 @@ import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.access.Action;
 import org.sonatype.nexus.proxy.item.RepositoryItemUid;
-import org.sonatype.nexus.proxy.item.StorageFileItem;
-import org.sonatype.nexus.proxy.item.StorageItem;
 import org.sonatype.nexus.proxy.repository.GroupRepository;
 import org.sonatype.nexus.proxy.repository.Repository;
 import org.sonatype.nexus.scheduling.AbstractNexusTask;
 import org.sonatype.nexus.scheduling.NexusScheduler;
 import org.sonatype.nexus.yum.Yum;
 import org.sonatype.nexus.yum.YumRepository;
-import org.sonatype.nexus.yum.internal.RepoMD;
 import org.sonatype.nexus.yum.internal.RepositoryUtils;
 import org.sonatype.nexus.yum.internal.YumRepositoryImpl;
 import org.sonatype.scheduling.ScheduledTask;
@@ -126,28 +122,14 @@ public class MergeMetadataTask
     final List<File> baseDirs = new ArrayList<File>();
     for (final Repository memberRepository : groupRepository.getMemberRepositories()) {
       log.trace("Looking up latest Yum metadata in {} member of {}", memberRepository.getId(), groupRepository.getId());
-      StorageItem repomdItem = null;
       try {
         log.trace("Retrieving {}:{}", memberRepository.getId(), Yum.PATH_OF_REPOMD_XML);
-        repomdItem = memberRepository.retrieveItem(
-            new ResourceStoreRequest(Yum.PATH_OF_REPOMD_XML)
-        );
+        memberRepository.retrieveItem(new ResourceStoreRequest(Yum.PATH_OF_REPOMD_XML));
+        // if we could retrieve repomd.xml it means we can merge it
+        baseDirs.add(RepositoryUtils.getBaseDir(memberRepository));
       }
       catch (ItemNotFoundException ignore) {
         // skipping as it looks like member is not an Yum repository
-      }
-      if (repomdItem != null && repomdItem instanceof StorageFileItem) {
-        try (InputStream in = ((StorageFileItem) repomdItem).getInputStream()) {
-          final RepoMD repomd = new RepoMD(in);
-          for (final String location : repomd.getLocations()) {
-            log.trace("Retrieving {}:{}", memberRepository.getId(), "/" + location);
-            memberRepository.retrieveItem(
-                new ResourceStoreRequest("/" + location)
-            );
-          }
-        }
-        // all metadata files are available by now so lets use it
-        baseDirs.add(RepositoryUtils.getBaseDir(memberRepository));
       }
     }
     return baseDirs;

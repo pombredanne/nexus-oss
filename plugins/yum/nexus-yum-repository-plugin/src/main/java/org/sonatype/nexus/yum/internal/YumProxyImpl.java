@@ -14,18 +14,27 @@
 package org.sonatype.nexus.yum.internal;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.sonatype.nexus.proxy.ResourceStoreRequest;
+import org.sonatype.nexus.proxy.access.Action;
+import org.sonatype.nexus.proxy.item.RepositoryItemUid;
+import org.sonatype.nexus.proxy.item.StorageFileItem;
+import org.sonatype.nexus.proxy.item.StorageItem;
 import org.sonatype.nexus.proxy.repository.ProxyRepository;
 import org.sonatype.nexus.proxy.repository.Repository;
+import org.sonatype.nexus.yum.Yum;
 import org.sonatype.nexus.yum.YumProxy;
 import org.sonatype.nexus.yum.YumRepository;
 
 import com.google.inject.assistedinject.Assisted;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -36,6 +45,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class YumProxyImpl
     implements YumProxy
 {
+
+  private static final Logger log = LoggerFactory.getLogger(YumProxyImpl.class);
 
   private final ProxyRepository repository;
 
@@ -69,6 +80,29 @@ public class YumProxyImpl
   @Override
   public YumRepository getYumRepository() {
     return yumRepository;
+  }
+
+  @Override
+  public YumProxy syncRepoMD() throws Exception {
+    StorageItem repomdItem = repository.retrieveItem(new ResourceStoreRequest(Yum.PATH_OF_REPOMD_XML));
+    if (repomdItem instanceof StorageFileItem) {
+      RepositoryItemUid repomdUid = repomdItem.getRepositoryItemUid();
+      repomdUid.getLock().lock(Action.update);
+      try {
+        try (InputStream in = ((StorageFileItem) repomdItem).getInputStream()) {
+          final RepoMD repomd = new RepoMD(in);
+          for (final String location : repomd.getLocations()) {
+            log.trace("Retrieving {}:{}", repository.getId(), "/" + location);
+            repository.retrieveItem(new ResourceStoreRequest("/" + location));
+          }
+        }
+      }
+      finally {
+        repomdUid.getLock().unlock();
+      }
+    }
+
+    return this;
   }
 
 }
